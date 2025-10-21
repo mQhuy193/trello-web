@@ -9,6 +9,7 @@ import Badge from '@mui/material/Badge'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import Tooltip from '@mui/material/Tooltip'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import LibraryAddIcon from '@mui/icons-material/LibraryAdd'
 
 import { ReactComponent as TrelloLogo } from '~/assets/trello.svg'
 import Workspaces from './Menus/Workspaces'
@@ -20,7 +21,6 @@ import Profiles from './Menus/Profiles'
 export default function AppBar() {
   return (
     <Box
-      px={2}
       sx={{
         width: '100%',
         height: (theme) => theme.trello.appBarHeight,
@@ -28,6 +28,7 @@ export default function AppBar() {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 2,
+        paddingX: 2,
         overflowX: 'auto'
       }}
     >
@@ -53,7 +54,9 @@ export default function AppBar() {
           <Recent />
           <Starred />
           <Templates />
-          <Button variant="outlined">Create</Button>
+          <Button variant="outlined" startIcon={<LibraryAddIcon />}>
+            Create
+          </Button>
         </Box>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

@@ -2,7 +2,7 @@
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
 import BoardBar from './BoardBar'
-import AppBar from '../../components/AppBar'
+import AppBar from '~/components/AppBar'
 import BoardContent from './BoardContent'
 
 export default function Board() {

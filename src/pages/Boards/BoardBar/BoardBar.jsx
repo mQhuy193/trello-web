@@ -12,6 +12,8 @@ import profileAvatar from '~/assets/Avatar.png'
 import Button from '@mui/material/Button'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 
+import { capitalizeFirstLetter } from '~/utils/formatter'
+
 const MENU_STYLES = {
   color: 'white',
   bgcolor: 'transparent',
@@ -26,7 +28,7 @@ const MENU_STYLES = {
   }
 }
 
-function BoardBar() {
+function BoardBar({ board }) {
   return (
     <Box
       sx={{
@@ -45,14 +47,14 @@ function BoardBar() {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Chip
           icon={<DashboardIcon />}
-          label="mQhuy MERN Stack Board"
+          label={board?.title}
           // clickable
           onClick={() => {}}
           sx={MENU_STYLES}
         />
         <Chip
           icon={<VpnLockIcon />}
-          label="Public/Private Workspace"
+          label={capitalizeFirstLetter(board?.type)}
           // clickable
           onClick={() => {}}
           sx={MENU_STYLES}
@@ -101,7 +103,10 @@ function BoardBar() {
               width: 34,
               height: 34,
               fontSize: 16,
-              border: 'none'
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              '&:first-of-type': { bgcolor: '#a4b0be' }
             }
           }}
         >

@@ -48,6 +48,7 @@ function BoardContent({ board }) {
         <ListColums columns={orderedColumns} />
       </Box>
     </DndContext>
+
   )
 }
 

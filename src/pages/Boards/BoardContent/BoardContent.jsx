@@ -10,7 +10,8 @@ import {
   MouseSensor,
   TouchSensor,
   DragOverlay,
-  defaultDropAnimationSideEffects
+  defaultDropAnimationSideEffects,
+  closestCorners
 } from '@dnd-kit/core'
 import { cloneDeep } from 'lodash'
 
@@ -166,7 +167,13 @@ function BoardContent({ board }) {
   }
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragOver={handleDragOver} sensors={sensors}>
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      collisionDetection={closestCorners}
+      sensors={sensors}
+    >
       <Box
         sx={{
           bgcolor: theme => (theme.palette.mode === 'dark' ? '#34495e' : '#1976d2'),

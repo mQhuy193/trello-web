@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box'
 import ListColums from './Listcolumns/Listcolums'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { arrayMove } from '@dnd-kit/sortable'
 import {
   DndContext,
@@ -11,9 +11,13 @@ import {
   TouchSensor,
   DragOverlay,
   defaultDropAnimationSideEffects,
-  closestCorners
+  closestCorners,
+  rectIntersection,
+  pointerWithin,
+  getFirstCollision,
+  closestCenter
 } from '@dnd-kit/core'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, last } from 'lodash'
 
 import { mapOrder } from '~/utils/sorts'
 import Column from './Listcolumns/Column/Column'
@@ -40,6 +44,9 @@ function BoardContent({ board }) {
   const [activeDragItemData, setActiveDragItemData] = useState(null)
   // Lưu lại column vào một state khi card được kéo vì khi card đang kéo sẽ cập nhật column
   const [oldColumn, setOldColumn] = useState(null)
+
+  //Điểm va chạm cuối cùng (xử lý thuật toán phát hiện va chạm)
+  const lastOverId = useRef(null)
 
   useEffect(() => {
     setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, '_id'))
@@ -216,7 +223,7 @@ function BoardContent({ board }) {
           //cập nhật lại 2 giá trị mới là card và cardOrdersIds trong targetColumn
           targetColumn.cards = dndOrderedCards
           targetColumn.cardOrderIds = dndOrderedCards.map(card => card._id)
-          console.log('targetColumn:', targetColumn)
+          // console.log('targetColumn:', targetColumn)
 
           return nextColumns
         })
@@ -248,12 +255,53 @@ function BoardContent({ board }) {
     sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.5' } } })
   }
 
+  //Custom lại thuật toán phát hiện va chạm tối ưu cho việc kéo thả card giữa các columns khác nhau
+  const collisionDetectionStrategy = useCallback(
+    args => {
+      if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
+        return closestCorners({ args })
+      }
+
+      //Tìm các điểm giao nhau, va chạm - intersection giữa các con trỏ
+      const pointerIntersections = pointerWithin(args)
+      const intersections = !!pointerIntersections?.length ? pointerIntersections : rectIntersection(args)
+
+      //Tìm overId đầu tiên trong đám intersection ở trên
+      let overId = getFirstCollision(intersections, 'id')
+
+      if (overId) {
+        //fix bug flickering
+        /*Nếu over là column thì sẽ tìm tới cardId gần nhất bên trong khu vực va chạm đó dựa vào 
+         thuật toán phát hiện va chạm closestCenter hoặc closestCorners đều được được. 
+         Ở trường hợp này thì dùng closestCenter mượt mà hơn
+         */
+        const checkColumn = orderedColumns.find(column => column._id === overId)
+        if (checkColumn) {
+          overId = closestCenter({
+            ...args,
+            droppableContainers: args.droppableContainers.filter(container => {
+              return container.id !== overId && checkColumn?.cardOrderIds?.includes(container.id)
+            })
+          })[0]?.id
+        }
+
+        lastOverId.current = overId
+        return [{ id: overId }]
+      }
+
+      return lastOverId.current ? [{ id: lastOverId.current }] : []
+    },
+    [activeDragItemType, orderedColumns]
+  )
+
   return (
     <DndContext
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
-      collisionDetection={closestCorners}
+      // collisionDetection={closestCorners}
+      //Nếu chỉ dùng closestCorners sẽ có bug flickering + sai lệch dữ liệu
+      collisionDetection={collisionDetectionStrategy}
       sensors={sensors}
     >
       <Box

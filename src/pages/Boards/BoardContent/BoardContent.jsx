@@ -13,13 +13,14 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import Box from '@mui/material/Box'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, isEmpty } from 'lodash'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ListColums from './Listcolumns/Listcolums'
 
 import { mapOrder } from '~/utils/sorts'
 import Column from './Listcolumns/Column/Column'
 import Card from './Listcolumns/Column/ListCards/Card/Card'
+import { generatePlaceholderCard } from '~/utils/formatter'
 
 const ACTIVE_DRAG_ITEM_TYPE = {
   COLUMN: 'ACTIVE_DRAG_ITEM_TYPE_COLUMN',
@@ -89,6 +90,11 @@ function BoardContent({ board }) {
         //Xoá card ở column active
         nextActiveColumn.cards = nextActiveColumn.cards.filter(card => card._id !== activeDraggingCardId)
 
+        //Thêm placeholder card nếu Column rỗng
+        if (isEmpty(nextActiveColumn.cards)) {
+          nextActiveColumn.cards = [generatePlaceholderCard(nextActiveColumn)]
+        }
+
         nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(card => card._id)
       }
 
@@ -103,6 +109,9 @@ function BoardContent({ board }) {
         }
 
         nextOverColumn.cards = nextOverColumn.cards.toSpliced(newCardIndex, 0, rebuild_activeDraggingCardData)
+
+        //Xoá Placeholder Card nếu nó đang tồn tại
+        nextOverColumn.cards = nextOverColumn.cards.filter(card => !card.FE_PlaceholderCard)
 
         nextOverColumn.cardOrderIds = nextOverColumn.cards.map(card => card._id)
       }
@@ -264,7 +273,7 @@ function BoardContent({ board }) {
       const pointerIntersections = pointerWithin(args)
 
       //fix triệt để bug flickering của Dnd-kit trong trường hợp sau:
-      // - Kéo một card có image cover lớn và kéo lên phía trên cùng ra khỏi khu vuẹc thả
+      // - Kéo một card có image cover lớn và kéo lên phía trên cùng ra khỏi khu vực thả
       if (!pointerIntersections?.length) return
 
       // Thuật toán phát hiện va chạm sẽ trả về một mảng các va chạm ở đây
